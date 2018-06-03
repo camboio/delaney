@@ -62,6 +62,7 @@ const readStrings = async () => {
       if(data){
          strings = JSON.parse(data);
          strings = cleanStrings(strings);
+         writeStrings(strings);
          setupMarkov();
          console.log('strings loaded from file');
          return;
@@ -136,7 +137,7 @@ const scrapeTimeline = (callback) => {
    var timeline = new scrape.TimelineStream('brigidwd', {
       retweets: false,
       replies: false,
-      count: strings.length > 0 ? 50 : 500
+      count: strings.length > 0 ? 50 : 5000
    });
 
    timeline.on('data', (chunk) => {
@@ -159,8 +160,8 @@ const scrapeTimeline = (callback) => {
 const setupMarkov = () => {
    var opts = {
       maxLength: 200,
-      minWords: 8,
-      minScore: 25
+      minWords: 10,
+      minScore: 30
    };
 
    console.log('setting up markov');
@@ -183,65 +184,66 @@ const generateMarkov = (callback) => {
    .then(result => callback(result));
 }
 
-var bot = new discord.Client({
-   token: config.token,
-   autorun: true
-});
+// var bot = new discord.Client({
+//    token: config.token,
+//    autorun: true
+// });
 
-bot.on('ready', async e => {
-   console.log('logged in as', bot.username);
-   bot.editUserInfo({username: 'delaney'});
-   await readStrings();
-   await readLatest();
-});
+// bot.on('ready', async e => {
+//    console.log('logged in as', bot.username);
+//    bot.editUserInfo({username: 'delaney'});
+//    await readStrings();
+//    await readLatest();
+// });
 
-bot.on('message', (user, uId, cId, message, e) => {
-   var reg = /^<@(\d{18})> !(\w*).*$/;
-   var del = /^<:delaney:\d{18}>$/;
+// bot.on('message', (user, uId, cId, message, e) => {
+//    var reg = /^<@(\d{18})> !(\w*).*$/;
+//    var del = /^<:delaney:\d{18}>$/;
 
-   if(del.test(message)){
-      generateMarkov(result => {
-         console.log(result);
-         bot.sendMessage({
-            to: cId,
-            message: result.string
-         });
-      });
-      return;
-   }
+//    if(del.test(message)){
+//       generateMarkov(result => {
+//          console.log(result);
+//          bot.sendMessage({
+//             to: cId,
+//             message: result.string
+//          });
+//       });
+//       return;
+//    }
    
-   if(reg.test(message)){
-      var match = reg.exec(message);
-      if(match[1] == bot.id){
-         var cmd = match[2];
+//    if(reg.test(message)){
+//       var match = reg.exec(message);
+//       if(match[1] == bot.id){
+//          var cmd = match[2];
 
-         switch(cmd){
-            case 'scrape':
-               bot.sendMessage({
-                  to: cId,
-                  message: 'Scraping (the bottom of the barrel)'
-               });
-               scrapeTimeline(() => {
-                  setupMarkov();
-                  bot.sendMessage({
-                     to: cId,
-                     message: 'Scraping complete'
-                  });
-               });
-               break;
-            case 'tweet':
-               generateMarkov(result => {
-                  console.log(result);
-                  bot.sendMessage({
-                     to: cId,
-                     message: result.string
-                  });
-               });
-               break;
-            default:
-               console.log('some other request');
-         }
-      }
-   }
-});
+//          switch(cmd){
+//             case 'scrape':
+//                bot.sendMessage({
+//                   to: cId,
+//                   message: 'Scraping (the bottom of the barrel)'
+//                });
+//                scrapeTimeline(() => {
+//                   setupMarkov();
+//                   bot.sendMessage({
+//                      to: cId,
+//                      message: 'Scraping complete'
+//                   });
+//                });
+//                break;
+//             case 'tweet':
+//                generateMarkov(result => {
+//                   console.log(result);
+//                   bot.sendMessage({
+//                      to: cId,
+//                      message: result.string
+//                   });
+//                });
+//                break;
+//             default:
+//                console.log('some other request');
+//          }
+//       }
+//    }
+// });
 
+scrapeTimeline(() => console.log('done'));
