@@ -159,9 +159,9 @@ const scrapeTimeline = (callback) => {
 
 const setupMarkov = () => {
    var opts = {
-      maxLength: 200,
-      minWords: 10,
-      minScore: 30
+      maxLength: 230,
+      minWords: 8,
+      minScore: 15
    };
 
    console.log('setting up markov');
