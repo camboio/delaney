@@ -189,9 +189,11 @@ const generateMarkov = (callback) => {
       return;
    }
 
+   console.log('generating markov');
+
    markov
       .generateSentence()
-      .then(result => callback(result));
+      .then(result => result.refs.length > 1 ? callback(result) : generateMarkov(callback));
 }
 
 var bot = new discord.Client({token: config.token, autorun: true});
