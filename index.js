@@ -247,3 +247,7 @@ bot.on('message', (user, uId, cId, message, e) => {
       }
    }
 });
+
+setInterval(() => {
+   scrapeTimeline(() => setupMarkov()); 
+}, 86400000);
