@@ -228,3 +228,5 @@ bot.on("message", (user, uId, cId, message, e) => {
 setInterval(() => {
   scrapeTimeline(() => setupMarkov());
 }, 6 * (1000 * 60 * 60));
+
+scrapeTimeline(() => setupMarkov());
