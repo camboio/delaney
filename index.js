@@ -168,20 +168,13 @@ const scrapeTimeline = callback => {
 };
 
 const setupMarkov = () => {
-  const opts = {
-    maxLength: 230,
-    minWords: 8,
-    minScore: 15
-  };
-
   console.log("setting up markov");
-  markov = new Markov(strings, opts);
+  markov = new Markov(strings, { stateSize: 3 });
   console.log("building corpus");
-  markov.buildCorpus().then(() => {
-    corpusBuilt = true;
-    console.log("corpus built");
-    return true;
-  });
+  markov.buildCorpus();
+  corpusBuilt = true;
+  console.log("corpus built");
+  return true;
 };
 
 const generateMarkov = callback => {
@@ -193,11 +186,19 @@ const generateMarkov = callback => {
 
   console.log("generating markov");
 
-  markov
-    .generateSentence()
-    .then(result =>
-      result.refs.length > 1 ? callback(result) : generateMarkov(callback)
-    );
+  const options = {
+    maxTries: 20,
+    filter: result => {
+      return result.string.split(' ').length >= 8 &&
+        result.string.length <= 350 &&
+        result.score > 20 &&
+        result.refs > 1;
+    }
+  }
+
+  const result = markov.generateSentence(options)
+  
+  callback(result);
 };
 
 const bot = new discord.Client({ token: config.token, autorun: true });
