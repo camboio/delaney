@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "sudo docker build -t delaneybot .",
-    "run": "sudo docker run delaneybot"
+    "start": "sudo docker run delaneybot"
   },
   "dependencies": {
     "discord.io": "Woor/discord.io#gateway_v6",
