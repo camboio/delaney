@@ -1,6 +1,6 @@
 const discord = require("discord.io");
 const scrape = require("scrape-twitter");
-const Markov = require("markov-strings");
+const Markov = require("markov-strings").default;
 const fs = require("fs");
 const _ = require("lodash");
 
@@ -67,7 +67,9 @@ const readStrings = async () => {
       writeStrings(strings);
       setupMarkov();
       console.log("strings loaded from file");
-      return;
+    } else {
+      strings = [];
+      scrapeTimeline(() => setupMarkov());
     }
   });
 };
@@ -115,9 +117,13 @@ const readLatest = async () => {
     }
 
     if (data) {
-      latest = JSON.parse(data);
-      console.log("latest tweet loaded from file");
-      return;
+      try{
+        latest = JSON.parse(data);
+        console.log("latest tweet loaded from file");
+      }
+      catch(e) {
+        return;
+      }
     }
   });
 };
@@ -147,7 +153,7 @@ const scrapeTimeline = callback => {
   const timeline = new scrape.TimelineStream("brigidwd", {
     retweets: false,
     replies: false,
-    count: strings.length > 0 ? 50 : 5000
+    count: strings.length > 0 ? 500 : 5000
   });
 
   timeline.on("data", chunk => {
@@ -168,8 +174,7 @@ const scrapeTimeline = callback => {
 };
 
 const setupMarkov = () => {
-  console.log("setting up markov");
-  markov = new Markov(strings, { stateSize: 3 });
+  markov = new Markov(strings, { stateSize: 2 });
   console.log("building corpus");
   markov.buildCorpus();
   corpusBuilt = true;
@@ -184,21 +189,26 @@ const generateMarkov = callback => {
     return;
   }
 
-  console.log("generating markov");
+  console.log("generating markov", strings.length);
 
   const options = {
-    maxTries: 20,
+    maxTries: 2000,
     filter: result => {
-      return result.string.split(' ').length >= 8 &&
-        result.string.length <= 350 &&
-        result.score > 20 &&
-        result.refs > 1;
+      return result.string.split(' ').length >= 5 &&
+        result.string.length <= 250 &&
+        result.score > 25 &&
+        !/https?:/.test(result.string) &&
+        result.refs.length > 1;
     }
   }
 
-  const result = markov.generateSentence(options)
-  
-  callback(result);
+  try { 
+    const result = markov.generate(options)
+    callback(result);
+  }
+  catch (e) {
+    callback({string: 'There was a problem generating a Markov, sorry.'});
+  }
 };
 
 const bot = new discord.Client({ token: config.token, autorun: true });
