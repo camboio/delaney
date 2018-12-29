@@ -12,6 +12,7 @@
     "discord.io": "Woor/discord.io#gateway_v6",
     "lodash": "^4.17.10",
     "markov-strings": "^2.0.1",
+    "mastodon": "^1.2.2",
     "scrape-twitter": "^0.11.0"
   }
 }

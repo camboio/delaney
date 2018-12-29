@@ -3,6 +3,7 @@ const scrape = require("scrape-twitter");
 const Markov = require("markov-strings").default;
 const fs = require("fs");
 const _ = require("lodash");
+const mastodon = require('./mastodon');
 
 const config = require("./config.json");
 
@@ -192,11 +193,11 @@ const generateMarkov = callback => {
   console.log("generating markov", strings.length);
 
   const options = {
-    maxTries: 2000,
+    maxTries: 3000,
     filter: result => {
-      return result.string.split(' ').length >= 5 &&
-        result.string.length <= 250 &&
-        result.score > 25 &&
+      return result.string.split(' ').length >= 7 &&
+        result.string.length <= 500 &&
+        result.score > 30 &&
         !/https?:/.test(result.string) &&
         result.refs.length > 1;
     }
@@ -207,11 +208,11 @@ const generateMarkov = callback => {
     callback(result);
   }
   catch (e) {
-    callback({string: 'There was a problem generating a Markov, sorry.'});
+    callback({string: 'There was a problem generating a Markov, sorry.', error: true});
   }
 };
 
-const bot = new discord.Client({ token: config.token, autorun: true });
+const bot = new discord.Client({ token: config.discordToken, autorun: true });
 
 bot.on("ready", async e => {
   console.log("logged in as", bot.username);
@@ -228,6 +229,7 @@ bot.on("message", (user, uId, cId, message, e) => {
     console.log(markov);
     latestPosted[cId] = markov;
     bot.sendMessage({ to: cId, message: markov.string });
+    if(!markov.error) mastodon.postToot(markov.string);
   };
 
   if (del.test(message) || hey.test(message)) {
@@ -240,4 +242,4 @@ setInterval(() => {
   scrapeTimeline(() => setupMarkov());
 }, 6 * (1000 * 60 * 60));
 
-scrapeTimeline(() => setupMarkov());
+// scrapeTimeline(() => setupMarkov());
